@@ -1,0 +1,25 @@
+# ai-service/requirements.txt
+# Tech stack per architecture doc section 2:
+# Python + FastAPI + Ollama/Gemini/Anthropic/OpenAI LLM & Vision + scikit-learn
+
+fastapi==0.111.0
+uvicorn[standard]==0.30.1
+python-dotenv==1.0.1
+pydantic==2.7.4
+
+# LLM + vision clients
+ollama==0.2.1
+google-generativeai==0.7.2
+anthropic==0.28.0
+openai==1.35.3
+
+# File upload handling (complaint photos arrive via multipart/form-data)
+python-multipart==0.0.9
+
+# Trend prediction (feature 06: scikit-learn regression)
+scikit-learn==1.5.0
+numpy==1.26.4
+pandas==2.2.2
+
+# HTTP client
+httpx==0.27.0
