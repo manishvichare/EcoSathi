@@ -33,8 +33,12 @@ const allowedOrigins = [
   'http://localhost:3000',
   'http://127.0.0.1:3000',
   'https://eco-sathi-blue.vercel.app',
+  // Render provides the public URL at runtime. Allow it so same-origin Vite
+  // module and stylesheet requests are not rejected by CORS before Express
+  // can serve the static frontend files.
+  process.env.RENDER_EXTERNAL_URL,
   ...customOrigins,
-];
+].filter(Boolean);
 
 app.use(
   cors({
