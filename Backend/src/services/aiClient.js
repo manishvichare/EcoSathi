@@ -7,9 +7,15 @@ const fs = require('fs');
 const FormData = require('form-data');
 const env = require('../config/env');
 
+// Render's Blueprint provides the AI service as an internal "host:port".
+// Keep normal http(s) URLs unchanged for local development and other hosts.
+const aiServiceUrl = /^https?:\/\//i.test(env.AI_SERVICE_URL)
+  ? env.AI_SERVICE_URL
+  : `http://${env.AI_SERVICE_URL}`;
+
 const aiApi = axios.create({
-  baseURL: env.AI_SERVICE_URL,
-  timeout: 90000, // vision/LLM calls can take 15-30s on local Ollama — 90s headroom
+  baseURL: aiServiceUrl,
+  timeout: 90000, // vision/LLM calls can take 15-30s on hosted models
 });
 
 /**

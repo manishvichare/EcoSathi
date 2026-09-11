@@ -180,9 +180,9 @@ needed. It also defines an optional Python AI service for AI-powered routes.
 3. Fill the secret environment variables requested by Render: `SUPABASE_URL`,
    `SUPABASE_SERVICE_KEY`, `WAQI_API_TOKEN`, `OPENWEATHER_API_KEY`, Cloudinary
    credentials, and optional Gmail credentials. Render generates `JWT_SECRET`.
-4. If using AI-powered routes, deploy `ecosathi-ai`, set its `BACKEND_ORIGIN`
-   to the Node service URL, add `GROQ_API_KEY`, then set the Node service's
-   `AI_SERVICE_URL` to the AI service URL.
+4. If using AI-powered routes, add `GROQ_API_KEY` to `ecosathi-ai`. The
+   Blueprint automatically connects the Node and AI services over Render's
+   private network; do not manually set `AI_SERVICE_URL` or `BACKEND_ORIGIN`.
 5. Deploy. Open `https://<your-service>.onrender.com/api/health` to confirm the
    service, then open `https://<your-service>.onrender.com` for the app.
 
