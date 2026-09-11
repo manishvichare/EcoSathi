@@ -32,6 +32,7 @@ const allowedOrigins = [
   'http://127.0.0.1:5173',
   'http://localhost:3000',
   'http://127.0.0.1:3000',
+  'https://eco-sathi-blue.vercel.app',
   ...customOrigins,
 ];
 
@@ -44,7 +45,8 @@ app.use(
       const normalizedOrigin = origin.replace(/\/+$/, '');
       if (
         allowedOrigins.includes(normalizedOrigin) ||
-        customOrigins.some((allowed) => normalizedOrigin === allowed)
+        customOrigins.some((allowed) => normalizedOrigin === allowed) ||
+        /^https:\/\/eco-sathi.*\.vercel\.app$/.test(normalizedOrigin)
       ) {
         return callback(null, true);
       }

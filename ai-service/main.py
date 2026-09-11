@@ -13,7 +13,17 @@ from app.routers import chatbot, complaint_analysis, notice_generator, suggestio
 
 load_dotenv()  # reads ai-service/.env
 
-BACKEND_ORIGIN = os.getenv("BACKEND_ORIGIN", "http://localhost:5000")
+raw_origins = os.getenv("BACKEND_ORIGIN", "").split(",")
+custom_origins = [o.strip().rstrip("/") for o in raw_origins if o.strip()]
+
+allowed_origins = [
+    "http://localhost:5000",
+    "http://127.0.0.1:5000",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "https://ecosathi.onrender.com",
+    "https://eco-sathi-blue.vercel.app",
+] + custom_origins
 
 app = FastAPI(
     title="EcoSathi AI Service",
@@ -22,10 +32,9 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# Only the Node backend should be allowed to call this service directly
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[BACKEND_ORIGIN],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

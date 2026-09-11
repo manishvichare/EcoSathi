@@ -1,11 +1,18 @@
 import axios from 'axios';
 
-// Get base URL from environment variables
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+// Get base URL from environment variables (Vite convention: VITE_API_URL)
+const rawApiUrl =
+  import.meta.env.VITE_API_URL ||
+  import.meta.env.VITE_API_BASE_URL ||
+  'http://localhost:5000/api';
+
+// Normalize: ensure it ends with '/api' for backend route compatibility
+const trimmedUrl = rawApiUrl.trim().replace(/\/+$/, '');
+export const API_URL = trimmedUrl.endsWith('/api') ? trimmedUrl : `${trimmedUrl}/api`;
 
 // Create Axios instance
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: API_URL,
   timeout: 120000, // 120 seconds — Ollama LLM calls can take 15-60s on local hardware
   headers: {
     'Content-Type': 'application/json',
