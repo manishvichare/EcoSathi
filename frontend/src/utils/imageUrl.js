@@ -19,11 +19,11 @@ export function resolveImageUrl(rawUrl) {
   const filename = rawUrl.replace(/\\/g, '/').split('/').pop();
   if (!filename) return null;
 
-  // Derive backend base origin from Vite environment or default localhost:5000
+  // Derive backend base origin. In production uploads share this app's origin.
   const apiBase =
     import.meta.env?.VITE_API_URL ||
     import.meta.env?.VITE_API_BASE_URL ||
-    'http://localhost:5000/api';
+    (import.meta.env?.DEV ? 'http://localhost:5000/api' : '/api');
   const backendOrigin = apiBase.replace(/\/api\/?$/, '');
 
   return `${backendOrigin}/uploads/complaints/${filename}`;

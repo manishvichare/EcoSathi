@@ -166,6 +166,33 @@ collections relate to each other.
 
 ---
 
+## Deploy the frontend and backend together on Render
+
+This repository includes [`render.yaml`](./render.yaml). It creates one Node
+web service that builds `frontend/`, then uses Express in `Backend/` to serve
+the compiled React application and its `/api` endpoints from the same URL. No
+separate static-site service, frontend URL, or production `VITE_API_URL` is
+needed. It also defines an optional Python AI service for AI-powered routes.
+
+1. Push this repository to GitHub (do not commit `.env` files).
+2. In the Render dashboard choose **New → Blueprint**, connect the repository,
+   and approve the `ecosathi` service detected from `render.yaml`.
+3. Fill the secret environment variables requested by Render: `SUPABASE_URL`,
+   `SUPABASE_SERVICE_KEY`, `WAQI_API_TOKEN`, `OPENWEATHER_API_KEY`, Cloudinary
+   credentials, and optional Gmail credentials. Render generates `JWT_SECRET`.
+4. If using AI-powered routes, deploy `ecosathi-ai`, set its `BACKEND_ORIGIN`
+   to the Node service URL, add `GROQ_API_KEY`, then set the Node service's
+   `AI_SERVICE_URL` to the AI service URL.
+5. Deploy. Open `https://<your-service>.onrender.com/api/health` to confirm the
+   service, then open `https://<your-service>.onrender.com` for the app.
+
+`CLIENT_ORIGIN` is optional in this setup because client and API share one
+origin. The Python `ai-service` cannot run inside this Node web service; it is
+therefore a second optional Render service. It uses Groq's hosted text and
+vision models, not Ollama.
+
+---
+
 ## Team
 
 | Person | Role | Owns |

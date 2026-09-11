@@ -1,7 +1,7 @@
 # app/services/llm_service.py
 #
 # Text-generation service for EcoSathi.
-# Supports Ollama, Gemini, OpenAI, or smart contextual fallback.
+# Uses Groq in hosted environments, with optional provider fallbacks.
 
 import os
 from pathlib import Path
@@ -14,9 +14,9 @@ from app.prompts.suggestion_prompt import SYSTEM_PROMPT as SUGGEST_SYS, build_su
 BASE_DIR = Path(__file__).resolve().parents[2]
 load_dotenv(BASE_DIR / ".env")
 
-LLM_PROVIDER = os.getenv("LLM_PROVIDER", "ollama").strip().lower()
-OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2")
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "groq").strip().lower()
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+GROQ_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
@@ -24,27 +24,28 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 async def _complete(system_prompt: str, user_prompt: str, max_tokens: int = 500) -> str:
     """
     Single shared entry point for text-generation calls.
-    Tries Ollama -> Gemini -> OpenAI -> Rule-based fallback.
+    Uses Groq when selected, then optional Gemini/OpenAI fallbacks.
     """
 
-    # 1. Try Ollama if configured
-    if LLM_PROVIDER == "ollama":
+    # 1. Groq provides hosted, low-latency chat completions. It does not need
+    # a local model process, so it works on Render.
+    if LLM_PROVIDER == "groq" and GROQ_API_KEY:
         try:
-            import ollama
-            client = ollama.Client(host=OLLAMA_BASE_URL)
-            response = client.chat(
-                model=OLLAMA_MODEL,
+            from groq import Groq
+            client = Groq(api_key=GROQ_API_KEY)
+            response = client.chat.completions.create(
+                model=GROQ_MODEL,
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt},
                 ],
-                options={"num_predict": max_tokens},
+                max_completion_tokens=max_tokens,
             )
-            content = response.get("message", {}).get("content", "")
+            content = response.choices[0].message.content
             if content:
                 return content.strip()
         except Exception as e:
-            print(f"[LLM Service] Ollama call skipped/failed ({e}). Attempting fallback...")
+            print(f"[LLM Service] Groq call failed ({e}). Attempting fallback...")
 
     # 2. Try Gemini API if key is present
     if GEMINI_API_KEY:

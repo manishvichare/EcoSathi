@@ -4,7 +4,8 @@ import axios from 'axios';
 const rawApiUrl =
   import.meta.env.VITE_API_URL ||
   import.meta.env.VITE_API_BASE_URL ||
-  'http://localhost:5000/api';
+  // The combined production service uses the current origin.
+  (import.meta.env.DEV ? 'http://localhost:5000/api' : '/api');
 
 // Normalize: ensure it ends with '/api' for backend route compatibility
 const trimmedUrl = rawApiUrl.trim().replace(/\/+$/, '');

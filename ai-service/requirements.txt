@@ -6,6 +6,7 @@ python-dotenv
 pydantic
 python-multipart
 httpx
+groq
 google-generativeai
 openai
 anthropic

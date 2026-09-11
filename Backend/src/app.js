@@ -60,8 +60,9 @@ app.use(express.json());
 // ── Static file serving for uploaded photos ──────────────
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
-// ── Health check & Root ─────────────────────────────────
-app.get('/', (req, res) => {
+// ── API health check ─────────────────────────────────────
+// Keep diagnostics under /api so / can be used by the React application.
+app.get('/api', (req, res) => {
   res.json({
     name: 'EcoSathi API Server',
     status: 'online',
@@ -85,7 +86,25 @@ app.use('/api/chat', chatRoutes);              // /api/chat
 app.use('/api/suggestions', suggestionRoutes);  // /api/suggestions/:city
 app.use('/api/news', newsRoutes);              // /api/news
 
-// ── 404 fallback ──────────────────────────────────────────
+// ── Production frontend ───────────────────────────────────
+// Render builds the Vite app into ../../frontend/dist. Serving it here means
+// the browser and API share one origin, so no public API URL is needed.
+const frontendDist = path.resolve(__dirname, '..', '..', 'frontend', 'dist');
+app.use(express.static(frontendDist));
+
+// React Router routes must return index.html when opened directly. API and
+// upload requests retain the JSON 404 below.
+app.get('*', (req, res, next) => {
+  const acceptsHtml = req.accepts(['html', 'json']) === 'html';
+  if (req.method === 'GET' && acceptsHtml && !req.path.startsWith('/api/') && !req.path.startsWith('/uploads/')) {
+    return res.sendFile(path.join(frontendDist, 'index.html'), (err) => {
+      if (err) next(err);
+    });
+  }
+  return next();
+});
+
+// ── JSON 404 fallback ──────────────────────────────────────
 app.use((req, res) => {
   res.status(404).json({ success: false, message: `Route ${req.originalUrl} not found` });
 });
