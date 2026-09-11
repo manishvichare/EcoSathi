@@ -107,7 +107,7 @@ exports.createComplaint = async (req, res) => {
       });
     }
 
-    const photoPath = `/uploads/complaints/${req.file.filename}`;
+    const photoPath = req.file?.path || `/uploads/complaints/${req.file?.filename}`;
 
     const { data: complaint, error: insertError } = await supabase
       .from('complaints')
@@ -149,6 +149,7 @@ exports.createComplaint = async (req, res) => {
       ...complaint,
       photo_url: normalizePhotoUrl(complaint.photo_url, req),
       photo: normalizePhotoUrl(complaint.photo_url, req),
+      imageUrl: normalizePhotoUrl(complaint.photo_url, req),
       supportCount: 0,
       helpCount: 0,
       aiAnalysis: { severity: complaint.severity, category: complaint.category, summary: complaint.ai_summary },
@@ -569,7 +570,7 @@ exports.addEvidence = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Report not found.' });
     }
 
-    const photoPath = `/uploads/complaints/${req.file.filename}`;
+    const photoPath = req.file?.path || `/uploads/complaints/${req.file?.filename}`;
 
     const { data: evidence, error } = await supabase
       .from('complaint_evidence')
@@ -859,7 +860,7 @@ exports.takeAuthorityAction = async (req, res) => {
     // 4. Save optional photo evidence if attached
     let evidenceRecord = null;
     if (req.file) {
-      const photoPath = `/uploads/complaints/${req.file.filename}`;
+      const photoPath = req.file?.path || `/uploads/complaints/${req.file?.filename}`;
       const { data: ev } = await supabase.from('complaint_evidence').insert({
         complaint_id: id,
         uploaded_by: officerId,
@@ -928,7 +929,7 @@ exports.submitResolution = async (req, res) => {
     const { data: complaint } = await supabase.from('complaints').select('id, status').eq('id', id).maybeSingle();
     if (!complaint) { cleanupFile(req.file); return res.status(404).json({ success: false, message: 'Report not found.' }); }
 
-    const photoPath = `/uploads/complaints/${req.file.filename}`;
+    const photoPath = req.file?.path || `/uploads/complaints/${req.file?.filename}`;
 
     // Save resolution evidence photo
     await supabase.from('complaint_evidence').insert({

@@ -18,7 +18,12 @@ const aiApi = axios.create({
  */
 exports.analyzeComplaint = async ({ imagePath, description, category }) => {
   const form = new FormData();
-  form.append('image', fs.createReadStream(imagePath));
+  if (imagePath && (imagePath.startsWith('http://') || imagePath.startsWith('https://'))) {
+    const response = await axios.get(imagePath, { responseType: 'stream' });
+    form.append('image', response.data);
+  } else if (imagePath) {
+    form.append('image', fs.createReadStream(imagePath));
+  }
   form.append('description', description || '');
   form.append('category', category || 'other');
 

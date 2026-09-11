@@ -1,28 +1,8 @@
 // src/middlewares/uploadMiddleware.js
-// Multer config for complaint photo uploads (used by complaintRoutes.js →
-// POST /api/complaints). Saves files to disk under /uploads/complaints.
+// Multer config for complaint photo uploads using Cloudinary storage.
 
 const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
-
-const uploadDir = path.join(__dirname, '..', '..', 'uploads', 'complaints');
-
-// Make sure the folder exists before multer tries to write into it
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    // e.g. 1723987654321-photo.jpg — timestamp avoids filename collisions
-    const uniqueName = `${Date.now()}-${file.originalname.replace(/\s+/g, '_')}`;
-    cb(null, uniqueName);
-  },
-});
+const { storage } = require('../config/cloudinary');
 
 // Only accept image files, max 5MB — keeps things fast for a hackathon demo
 const fileFilter = (req, file, cb) => {
@@ -40,4 +20,25 @@ const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
 });
 
-module.exports = upload; // usage: uploadMiddleware.single('photo')
+// Wrapper to seamlessly support both 'image' and 'photo' field names
+const originalSingle = upload.single.bind(upload);
+upload.single = function (fieldName) {
+  if (fieldName === 'image' || fieldName === 'photo') {
+    const fieldsUpload = upload.fields([
+      { name: 'image', maxCount: 1 },
+      { name: 'photo', maxCount: 1 },
+    ]);
+    return (req, res, next) => {
+      fieldsUpload(req, res, (err) => {
+        if (err) return next(err);
+        if (req.files) {
+          req.file = req.files['image']?.[0] || req.files['photo']?.[0];
+        }
+        next();
+      });
+    };
+  }
+  return originalSingle(fieldName);
+};
+
+module.exports = upload;

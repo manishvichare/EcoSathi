@@ -31,7 +31,7 @@ router.get('/:id/activity', complaintController.getActivity);
 router.post(
   '/',
   authMiddleware.protect,
-  uploadMiddleware.single('photo'),
+  uploadMiddleware.single('image'),
   complaintController.createComplaint
 );
 

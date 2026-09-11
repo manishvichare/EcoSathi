@@ -22,22 +22,33 @@ const errorHandler = require('./middlewares/errorHandler');
 const app = express();
 
 // ── Global middleware ──────────────────────────────────
+const customOrigins = (env.CLIENT_ORIGIN || '')
+  .split(',')
+  .map((o) => o.trim().replace(/\/+$/, ''))
+  .filter(Boolean);
+
 const allowedOrigins = [
   'http://localhost:5173',
   'http://127.0.0.1:5173',
   'http://localhost:3000',
   'http://127.0.0.1:3000',
-  env.CLIENT_ORIGIN,
-].filter(Boolean);
+  ...customOrigins,
+];
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin or matching allowed origins, or in dev mode
-      if (!origin || allowedOrigins.includes(origin) || env.NODE_ENV === 'development') {
+      if (!origin || env.NODE_ENV === 'development') {
         return callback(null, true);
       }
-      return callback(new Error('Not allowed by CORS'));
+      const normalizedOrigin = origin.replace(/\/+$/, '');
+      if (
+        allowedOrigins.includes(normalizedOrigin) ||
+        customOrigins.some((allowed) => normalizedOrigin === allowed)
+      ) {
+        return callback(null, true);
+      }
+      return callback(new Error(`CORS blocked for origin: ${origin}`));
     },
     credentials: true,
   })
@@ -47,7 +58,15 @@ app.use(express.json());
 // ── Static file serving for uploaded photos ──────────────
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
-// ── Health check ────────────────────────────────────────
+// ── Health check & Root ─────────────────────────────────
+app.get('/', (req, res) => {
+  res.json({
+    name: 'EcoSathi API Server',
+    status: 'online',
+    health: '/api/health',
+  });
+});
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', env: env.NODE_ENV });
 });
