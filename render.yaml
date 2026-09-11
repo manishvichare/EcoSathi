@@ -3,7 +3,9 @@ services:
     name: ecosathi
     runtime: node
     plan: free
-    buildCommand: npm ci --prefix frontend && npm run build --prefix frontend && npm ci --prefix Backend
+    # Vite is a frontend devDependency but is required while building the
+    # production bundle. Explicitly include dev dependencies during this step.
+    buildCommand: npm ci --include=dev --prefix frontend && npm run build --prefix frontend && npm ci --prefix Backend
     startCommand: npm start --prefix Backend
     healthCheckPath: /api/health
     envVars:
